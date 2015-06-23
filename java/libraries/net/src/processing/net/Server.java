@@ -168,7 +168,7 @@ public class Server implements Runnable {
   }
   
   
-  protected int clientIndex(Client client) {
+  public int clientIndex(Client client) {
     for (int i = 0; i < clientCount; i++) {
       if (clients[i] == client) {
         return i;
@@ -237,6 +237,26 @@ public class Server implements Runnable {
       }
     }
     return null;
+  }
+
+  /*
+   *  Contrib: Nick
+   *  Return a specific client based on its index
+   */
+  public Client getClientAt(int index){
+    Client client = clients[index];
+    if (!client.active()){
+      removeIndex(index); //remove the dead client
+    }
+    return client;
+  }
+
+  public Client[] getClientList(){
+    return clients;
+  }
+
+  public int getClientListLength(){
+    return clientCount;
   }
 
 
