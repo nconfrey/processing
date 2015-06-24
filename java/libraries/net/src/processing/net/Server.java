@@ -101,7 +101,8 @@ public class Server implements Runnable {
         serverEventMethod =
           parent.getClass().getMethod("serverEvent",
                                       new Class[] { Server.class,
-                                                    Client.class });
+                                                    Client.class,
+                                                    String.class });
       } catch (Exception e) {
         // no such method, or an error.. which is fine, just ignore
       }
@@ -114,6 +115,19 @@ public class Server implements Runnable {
     }
   }
 
+  //Send a disconnect to the event handler, if it exists
+  protected void disconnectEvent(Client client){
+    if (serverEventMethod != null) {
+      try {
+        //TODO: using a String for eventType now. Should change over to a event object?
+        serverEventMethod.invoke(parent, new Object[] { this, client, "disconnect"});
+      } catch (Exception e) {
+        System.err.println("Disabling serverEvent() for port " + port);
+        e.printStackTrace();
+        serverEventMethod = null;
+      }
+    }
+  }
 
   /**
    * ( begin auto-generated from Server_disconnect.xml )
@@ -135,6 +149,8 @@ public class Server implements Runnable {
   
   
   protected void removeIndex(int index) {
+    //First send a disconnect event
+    disconnectEvent(clients[index]);
     clientCount--;
     // shift down the remaining clients
     for (int i = index; i < clientCount; i++) {
@@ -326,7 +342,7 @@ public class Server implements Runnable {
           addClient(client);
           if (serverEventMethod != null) {
             try {
-              serverEventMethod.invoke(parent, new Object[] { this, client });
+              serverEventMethod.invoke(parent, new Object[] { this, client, "connect"});
             } catch (Exception e) {
               System.err.println("Disabling serverEvent() for port " + port);
               e.printStackTrace();
