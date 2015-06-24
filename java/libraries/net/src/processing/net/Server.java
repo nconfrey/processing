@@ -251,11 +251,26 @@ public class Server implements Runnable {
     return client;
   }
 
+  //make sure that all the clients are still connected
+  //if not, send a disconnect event
+  protected void checkClients()
+  {
+    for (int i = 0; i < clientCount; i++) {
+      if (!clients[i].active()){
+        removeIndex(i);  //Remove dead client - also updates clientCount
+      }
+    }
+  }
+
   public Client[] getClientList(){
+    //first check to see if there are any dead clients
+    checkClients();
     return clients;
   }
 
   public int getClientListLength(){
+    //first check if there are dead clients
+    checkClients();
     return clientCount;
   }
 
