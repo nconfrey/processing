@@ -256,13 +256,13 @@ public class Server implements Runnable {
   }
 
   /*
-   *  Contrib: Nick
    *  Return a specific client based on its index
    */
-  public Client getClientAt(int index){
+  public Client getClient(int index){
     Client client = clients[index];
     if (!client.active()){
       removeIndex(index); //remove the dead client
+      return null;
     }
     return client;
   }
@@ -278,13 +278,13 @@ public class Server implements Runnable {
     }
   }
 
-  public Client[] getClientList(){
+  public Client[] getClients(){
     //first check to see if there are any dead clients
     checkClients();
     return clients;
   }
 
-  public int getClientListLength(){
+  public int numClients(){
     //first check if there are dead clients
     checkClients();
     return clientCount;
