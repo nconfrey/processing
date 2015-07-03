@@ -51,6 +51,7 @@ import java.net.*;
 public class Server implements Runnable {
   PApplet parent;
   Method serverEventMethod;
+  Method serverDisconnectMethod;
 
   Thread thread;
   ServerSocket server;
@@ -101,11 +102,21 @@ public class Server implements Runnable {
         serverEventMethod =
           parent.getClass().getMethod("serverEvent",
                                       new Class[] { Server.class,
-                                                    Client.class,
-                                                    String.class });
+                                                    Client.class });
       } catch (Exception e) {
         // no such method, or an error.. which is fine, just ignore
       }
+
+      //Now checking if a method exists for a disconnect event
+      //Different than a connection event so we don't break old code/examples
+      try {
+        serverDisconnectMethod =
+          parent.getClass().getMethod("serverDisconnectEvent",
+                                      new Class[] { Server.class,
+                                                    Client.class });
+      } catch (Exception e) {
+        // no such method, or an error.. which is fine, just ignore
+      }      
 
     } catch (IOException e) {
       //e.printStackTrace();
@@ -119,12 +130,11 @@ public class Server implements Runnable {
   protected void disconnectEvent(Client client){
     if (serverEventMethod != null) {
       try {
-        //TODO: using a String for eventType now. Should change over to a event object?
-        serverEventMethod.invoke(parent, new Object[] { this, client, "disconnect"});
+        serverDisconnectMethod.invoke(parent, new Object[] { this, client });
       } catch (Exception e) {
-        System.err.println("Disabling serverEvent() for port " + port);
+        System.err.println("Disabling serverDisconnectEvent() for port " + port);
         e.printStackTrace();
-        serverEventMethod = null;
+        serverDisconnectMethod = null;
       }
     }
   }
@@ -140,6 +150,9 @@ public class Server implements Runnable {
    * @param client the client to disconnect
    */
   public void disconnect(Client client) {
+    //First send a disconnect event
+    disconnectEvent(client);
+
     client.stop();
     int index = clientIndex(client);
     if (index != -1) {
@@ -149,8 +162,6 @@ public class Server implements Runnable {
   
   
   protected void removeIndex(int index) {
-    //First send a disconnect event
-    disconnectEvent(clients[index]);
     clientCount--;
     // shift down the remaining clients
     for (int i = index; i < clientCount; i++) {
@@ -342,7 +353,7 @@ public class Server implements Runnable {
           addClient(client);
           if (serverEventMethod != null) {
             try {
-              serverEventMethod.invoke(parent, new Object[] { this, client, "connect"});
+              serverEventMethod.invoke(parent, new Object[] { this, client });
             } catch (Exception e) {
               System.err.println("Disabling serverEvent() for port " + port);
               e.printStackTrace();
