@@ -150,9 +150,6 @@ public class Server implements Runnable {
    * @param client the client to disconnect
    */
   public void disconnect(Client client) {
-    //First send a disconnect event
-    disconnectEvent(client);
-
     client.stop();
     int index = clientIndex(client);
     if (index != -1) {
@@ -162,6 +159,8 @@ public class Server implements Runnable {
   
   
   protected void removeIndex(int index) {
+    //First send a disconnect event
+    disconnectEvent(clients[index]);
     clientCount--;
     // shift down the remaining clients
     for (int i = index; i < clientCount; i++) {
